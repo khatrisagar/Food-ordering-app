@@ -1,59 +1,69 @@
-import { FoodItem } from "@/models";
+import { apiFeatureQuerystringInterface } from "@/interfaces";
+import { type } from "os";
 export class APIFeature {
   query: any;
-  queryString: any;
+  queryString: apiFeatureQuerystringInterface;
   page: number;
   limit: number;
   skip: number;
-  constructor(query: any, queryString: any) {
+  count: number;
+  constructor(query: any, queryString: apiFeatureQuerystringInterface) {
     this.query = query;
     this.queryString = queryString;
     this.page = 1;
     this.limit = 5;
     this.skip = 0;
+    this.count = 0;
   }
 
   sort() {
     this.query = this?.query?.sort(this.JSONParser(this?.queryString?.sort));
+
     return this;
   }
 
-  filter(allowedSearchFields: any) {
-    const searchParams = this.JSONParser(this?.queryString?.search);
-    console.log("searchParams", searchParams);
+  filter(allowedSearchFields: Array<any>) {
+    const searchValue = this?.queryString?.search;
     const filterSearchQuery: Array<object> = [];
-    allowedSearchFields.forEach((element: any) => {
-      if (element.includes(".")) {
-      } else {
-        if (searchParams?.[element] && searchParams?.[element] !== "") {
+    allowedSearchFields.forEach((element: { field: string; type: string }) => {
+      if (!searchValue || searchValue !== "") {
+        if (element.type === "string" && typeof searchValue === "string") {
           filterSearchQuery.push({
-            [element]: { $regex: searchParams[element], $options: "i" },
+            [element.field]: { $regex: searchValue, $options: "i" },
+          });
+        }
+        if (element.type === "number" && !isNaN(searchValue)) {
+          filterSearchQuery.push({
+            [element.field]: searchValue,
           });
         }
       }
     });
-    console.log(filterSearchQuery);
-
     if (filterSearchQuery.length) {
-      this.query = this?.query.find({
-        // $or: filterSearchQuery,
-        // $where: "function() { return this.category.name === 'item1' }",
+      this.query = this?.query?.where({
+        $or: filterSearchQuery,
       });
-    } else {
-      this.query = this?.query.find();
+      // to search in relational collection
+      // this.query = this?.model.aggregate([
+      //   {
+      //     $lookup: {
+      //       from: "foodcategories",
+      //       localField: "category",
+      //       foreignField: "_id",
+      //       as: "category",
+      //     },
+      //   },
+      //   { $match: { $or: filterSearchQuery } },
+      //   {
+      //     $group: {
+      //       _id: null,
+      //       count: { $sum: 1 },
+      //       items: { $push: "$$ROOT" },
+      //     },
+      //   },
+      // ]);
     }
 
-    // FoodItem.aggregate([
-    //   {
-    //     $lookup: {
-    //       from: "foodcategories",
-    //       localField: "category",
-    //       foreignField: "_id",
-    //       as: "category",
-    //     },
-    //   },
-    //   { $match: { "category.name": "Pizza" } },
-    // ]);
     return this;
   }
   pagination() {

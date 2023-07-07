@@ -14,6 +14,7 @@ import { authenticate } from "@/middlewares";
 // auth route
 import { authRoutes } from "@/routes";
 app.use("/api/auth", authRoutes);
+
 // supplier routes
 import { foodRoutes } from "@/routes";
 app.use("/api/food", authenticate, foodRoutes);

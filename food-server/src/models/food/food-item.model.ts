@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import { FoodCategory } from "./food-category.model";
+import { foodItemModelInterface } from "@/interfaces";
 
-const foodItem = new Schema({
+const foodItem = new Schema<foodItemModelInterface>({
   name: {
     type: String,
     required: [true, "Item Name Should not be emplty"],
@@ -25,7 +25,7 @@ const foodItem = new Schema({
   },
   rating: [
     {
-      users: { type: Schema.Types.ObjectId, ref: "user" },
+      user: { type: Schema.Types.ObjectId, ref: "user" },
       ratings: { type: Number, enum: [1, 2, 3, 4, 5] },
       review: { type: String },
       default: [],
@@ -44,5 +44,4 @@ foodItem.virtual("itemCategory", {
   foreignField: "_id",
 });
 
-// (foodItem as any).set("debug", true);
 export const FoodItem = model("FoodItem", foodItem);

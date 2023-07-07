@@ -7,7 +7,9 @@ export {
 export {
   getFoodItemsDb,
   addFoodItemsDb,
-  getItemsWithCategoryDb,
+  getItemsByCategoryDb,
+  getSingleFoodItemDb,
+  updateFoodItemsDb,
 } from "@/services/food/food-item.service";
 
 export {

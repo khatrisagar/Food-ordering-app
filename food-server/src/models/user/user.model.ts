@@ -31,4 +31,5 @@ const user = new Schema<any>({
     refPath: "role",
   },
 });
+// set encrypted pasword with pre middleware
 export const User = model("User", user);

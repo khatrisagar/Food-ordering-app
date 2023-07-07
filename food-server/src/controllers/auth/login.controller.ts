@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { findUserDb } from "@/services";
 import { verifyPassword, createJWTToken } from "@/utils";
 import { ObjectId } from "mongoose";
+import { APIResponse } from "@/utils";
+import { httpStatus, apiResponseMessages } from "@/enums";
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
@@ -14,12 +16,20 @@ export const loginUser = async (req: Request, res: Response) => {
       );
       if (isRightPassword) {
         const token = createJWTToken(user._id as ObjectId);
-        res.status(200).json({ data: token });
+        return new APIResponse(res, httpStatus.OK, token).success();
       }
     } else {
-      res.json({ message: "user not found" });
+      return new APIResponse(
+        res,
+        httpStatus.OK,
+        apiResponseMessages.USER_NOT_FOUND
+      ).failed();
     }
   } catch (error) {
-    res.json((error as Error).message);
+    return new APIResponse(
+      res,
+      httpStatus.INTERNAL_SERVER_ERROR,
+      apiResponseMessages.SOMETHING_WENT_WRONG
+    ).failed();
   }
 };

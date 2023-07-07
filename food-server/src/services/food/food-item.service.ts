@@ -1,36 +1,26 @@
-import { FoodCategory, FoodItem } from "@/models";
+import { foodItemInterface } from "@/interfaces";
+import { FoodItem } from "@/models";
 import { APIFeature } from "@/utils";
+import { apiFeatureQuerystringInterface } from "@/interfaces";
 
-export const getFoodItemsDb = async (queryString: object) => {
+export const getFoodItemsDb = async (
+  queryString: apiFeatureQuerystringInterface
+) => {
   try {
-    // const foodItemFeatures = new APIFeature(
-    //   FoodItem.aggregate([
-    //     {
-    //       $lookup: {
-    //         from: "foodcategories",
-    //         localField: "category",
-    //         foreignField: "_id",
-    //         as: "category",
-    //       },
-    //     },
-    //     { $match: { "category.name": "Burger" } },
-    //   ]),
-    //   queryString
-    // )
-    //   .sort()
-    //   .filter(["name", "category.name", "price"]);
-
+    const allowedSearchFields: any = [
+      {
+        field: "name",
+        type: "string",
+      },
+      { field: "price", type: "number" },
+    ];
     const foodItemFeatures = new APIFeature(
-      FoodItem.find().populate({
-        path: "category",
-        select: "-__v -image",
-      }),
+      FoodItem.find().populate({ path: "category" }),
       queryString
     )
       .sort()
-      .filter(["name", "category.name", "price"]);
+      .filter(allowedSearchFields);
     const count = await foodItemFeatures.query.clone().count();
-    console.log("count", count);
     const foodItems = await foodItemFeatures.pagination().query;
 
     const pagination = {
@@ -48,7 +38,56 @@ export const getFoodItemsDb = async (queryString: object) => {
     throw new Error((error as Error).message);
   }
 };
-export const addFoodItemsDb = async (payload: any) => {
+
+export const getItemsByCategoryDb = async (
+  categoryId: string,
+  queryString: apiFeatureQuerystringInterface
+) => {
+  try {
+    const allowedSearchFields: any = [
+      {
+        field: "name",
+        type: "string",
+      },
+      { field: "price", type: "number" },
+    ];
+    const foodItemFeatures = new APIFeature(
+      FoodItem.find({ category: categoryId }).populate({
+        path: "category",
+      }),
+      queryString
+    )
+      .sort()
+      .filter(allowedSearchFields);
+    const count = await foodItemFeatures.query.clone().count();
+    const foodItems = await foodItemFeatures.pagination().query;
+
+    const pagination = {
+      itemCount: foodItems.length,
+      count,
+      page: foodItemFeatures.page,
+      limit: foodItemFeatures.limit,
+      skip: foodItemFeatures.skip,
+    };
+    return {
+      foodItems,
+      pagination,
+    };
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
+export const getSingleFoodItemDb = async (itemId: string) => {
+  try {
+    const item = await FoodItem.findById(itemId);
+    return item;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
+export const addFoodItemsDb = async (payload: foodItemInterface) => {
   try {
     const foodItem = await FoodItem.create(payload);
     return foodItem;
@@ -57,13 +96,20 @@ export const addFoodItemsDb = async (payload: any) => {
   }
 };
 
-export const getItemsWithCategoryDb = async () => {
+export const updateFoodItemsDb = async (itemId: string, payload: any) => {
   try {
-    const foodCategory = await FoodCategory.find().populate({
-      path: "itemCategory",
+    const item = await FoodItem.findByIdAndUpdate(itemId, payload, {
+      new: true,
     });
-
-    return foodCategory;
+    return item;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+export const deleteFoodItemsDb = async (itemId: string) => {
+  try {
+    const item = await FoodItem.findByIdAndDelete(itemId);
+    return item;
   } catch (error) {
     throw new Error((error as Error).message);
   }

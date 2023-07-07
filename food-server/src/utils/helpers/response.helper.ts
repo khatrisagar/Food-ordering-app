@@ -1,15 +1,15 @@
 import { Response } from "express";
-
+import { paginationInterface } from "@/interfaces";
 export class APIResponse {
   res: Response;
   statusCode: number;
-  responseData: any;
-  pagination?: any;
+  responseData: Array<any> | object | null;
+  pagination?: paginationInterface;
   constructor(
     res: Response,
     statusCode: number,
     responseData: any,
-    pagination?: any
+    pagination?: paginationInterface
   ) {
     this.statusCode = statusCode;
     this.responseData = responseData;
@@ -22,9 +22,14 @@ export class APIResponse {
       .status(this.statusCode)
       .json({ data: this.responseData, pagination: this.pagination });
   }
-  failed() {
+  successMessage() {
     return this.res
       .status(this.statusCode)
-      .json({ message: this.responseData?.message });
+      .json({ message: this.responseData });
+  }
+  failed(error?: Error) {
+    return this.res
+      .status(this.statusCode)
+      .json({ message: this.responseData, error: error?.message });
   }
 }
